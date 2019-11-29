@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import java.lang.Math;
 
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -42,7 +43,7 @@ public class MyCanvas extends View
 
         for(int i =0; i<musicalNotes.length; i++)
         {
-            if( note == musicalNotes[i])
+            if( note.equals(musicalNotes[i]) )
             {
                 noteVertices[0] = xVerts[i];
                 noteVertices[1] = yVerts[i];
@@ -136,7 +137,7 @@ public class MyCanvas extends View
             {
                 RectF currentKey;
 
-                //Log.d("CREATION",String.valueOf(currentKeyIndex) + "," + String.valueOf(i));
+                //this is the bit that actually
                 if(i % 2 == 0)
                 {
 
@@ -186,6 +187,8 @@ public class MyCanvas extends View
                     canvas.drawRect(currentKey,paint );
                 }
 
+
+
                 keys[currentKeyIndex][0] = currentKey;
 
                 //kind of awkward solution to mapping the key triangles to the correct notes while maintaining the proper clipping
@@ -197,10 +200,9 @@ public class MyCanvas extends View
                     currentKeyIndex--;
                 }
             }
-            else
-            {
-                currentKeyIndex++;
-            }
+            else{currentKeyIndex++;} //basically mimicking what the loop is doing (counting in 2) but changes the sequence so that its out of 12 keys and not 14
+
+
 
             xPos += whiteKeyWidth;
 
@@ -239,6 +241,7 @@ public class MyCanvas extends View
         }
 
         paint.setColor(Color.BLACK);
+        paint.setStrokeWidth(3);
         for(int i = 0; i < vertexCount; i++)
         {
             for(int j = 0; j < vertexCount; j++)
