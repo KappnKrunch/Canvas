@@ -18,10 +18,10 @@ public class MyCanvas extends View
     float[] xVerts = new float[12];
     float[] yVerts = new float[12];
 
-    String[] musicalNotes = {"C","G","D","A","E","B","Gb","Db","Ab","Eb","Bb","F"};
-    String[] keyBoardNoteOrder = {"C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"};
+    String[] musicalNotes = {"C","G","D","A","E","B","Gb","Db","Ab","Eb","Bb","F"}; //order which they appear on the circle
+    String[] keyBoardNoteOrder = {"C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"}; //order which they appear on the keyboard
 
-    RectF[] keys = new RectF[24]; //each keys contains multiple rectangles
+    RectF[][] keys = new RectF[24][2]; //each keys contains multiple rectangles
     int[] activeKeys = new int[24];
 
 
@@ -151,16 +151,22 @@ public class MyCanvas extends View
 
                     paint.setStyle(Paint.Style.FILL);
 
-                    //for the white keys two rectangles are needed currentKey is the lower half
+                    //for the white keys multiple rectangles are needed because the area that can be tapped isn't a perfect rectangle
                     currentKey = new RectF(xPos - whiteKeyWidth*0.48f , yPos + whiteKeyHeight*0.12f,
                             xPos + whiteKeyWidth*0.48f,yPos + whiteKeyHeight*0.48f);
 
-                    canvas.drawRect(currentKey,paint);
+                    RectF currentKeyPt2 = new RectF(xPos - whiteKeyWidth*0.24f , yPos - whiteKeyHeight*0.48f,
+                            xPos + whiteKeyWidth*0.24f,yPos + whiteKeyHeight*0.48f);
 
-                    RectF currentKeyPt2 = new RectF(xPos - whiteKeyWidth*0.48f , yPos - whiteKeyHeight*0.48f,
+                    RectF currentKeyPt3 = new RectF(xPos - whiteKeyWidth*0.48f , yPos - whiteKeyHeight*0.48f,
                             xPos + whiteKeyWidth*0.48f,yPos + whiteKeyHeight*0.48f);
 
-                    //canvas.drawRect(currentKeyPt2,paint);
+
+                    canvas.drawRect(currentKey,paint);
+                    canvas.drawRect(currentKeyPt2,paint);
+                    canvas.drawRect(currentKeyPt3,paint);
+
+                    keys[currentKeyIndex][1] = currentKeyPt2;
                 }
                 else
                 {
@@ -180,7 +186,7 @@ public class MyCanvas extends View
                     canvas.drawRect(currentKey,paint );
                 }
 
-                keys[currentKeyIndex] = currentKey;
+                keys[currentKeyIndex][0] = currentKey;
 
                 //kind of awkward solution to mapping the key triangles to the correct notes while maintaining the proper clipping
                 //ie black keys go on top of white keys
@@ -261,9 +267,13 @@ public class MyCanvas extends View
             for(int i = 0; i < keys.length;i++)
             {
                 //if the point where you tap is inside any of the keys rectangles
-                boolean inKey = (keys[i].contains(event.getX(),event.getY()));
+                //if it is, the keys gets toggled
+                boolean inKey1 = (keys[i][0].contains(event.getX(),event.getY()));
 
-                if(inKey){
+                boolean inKey2 = false;
+                if( keys[i][1] != null ){inKey2 = keys[i][1].contains(event.getX(),event.getY());}
+
+                if(inKey1 | inKey2){
                     activeKeys[i] = (activeKeys[i]+1) % 2; //toggles the key
                     this.invalidate();
                 }
