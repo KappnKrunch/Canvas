@@ -146,7 +146,7 @@ public class MyCanvas extends View
                     }
                     else
                     {
-                        paint.setColor(Color.RED);
+                        paint.setColor(0xfffd837b);//0xfd837b
                     }
 
                     paint.setStyle(Paint.Style.FILL);
@@ -176,7 +176,7 @@ public class MyCanvas extends View
                     }
                     else
                     {
-                        paint.setColor(Color.RED);
+                        paint.setColor(0xffb84451);
                     }
 
                     paint.setStyle(Paint.Style.FILL);
