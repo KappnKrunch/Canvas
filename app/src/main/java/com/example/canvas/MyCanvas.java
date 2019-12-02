@@ -11,6 +11,8 @@ import android.graphics.RectF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.graphics.Path;
+import java.util.ArrayList;
 
 public class MyCanvas extends View
 {
@@ -23,8 +25,15 @@ public class MyCanvas extends View
     String[] keyBoardNoteOrder = {"C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"}; //order which they appear on the keyboard
 
     RectF[][] keys = new RectF[24][2]; //each keys contains multiple rectangles
+
+    int activeChordIndex = 0;
+    ArrayList<int[]> chords = new ArrayList();
     int[] activeKeys = new int[24];
 
+    RectF addChordButton;
+    RectF removeChordButton;
+    RectF cycleChordProgressionForwardButton;
+    RectF cycleChordProgressionBackwardButton;
 
 
     public MyCanvas(Context context)
@@ -33,6 +42,55 @@ public class MyCanvas extends View
 
         paint = new Paint();
         paint.setAntiAlias(true);
+
+    }
+
+    private void SwitchChords(int direction)
+    {
+        //takes in an int that corresponds to how many spaces the index shifts
+        if(chords.size() > 0) {
+            activeChordIndex = (activeChordIndex + direction) % chords.size();
+            if( activeChordIndex < 0){activeChordIndex+=chords.size();}
+
+            //activeKeys = chords.get(activeChordIndex);
+
+            for (int i=0;i<activeKeys.length;i++)
+            {
+                activeKeys[i] = chords.get(activeChordIndex)[i];
+
+            }
+        }
+    }
+
+    private void AddChord()
+    {
+        //creates a new set of active keys and copies the current sequence
+        int[] newChord = new int[24];
+        for(int i=0; i < 24; i++){ newChord[i]=activeKeys[i]; }
+
+        chords.add(newChord);
+
+        //sets all the keys to in active after adding chord
+        for (int i=0; i<activeKeys.length;i++){ activeKeys[i] = 0; }
+    }
+
+    private void RemoveChord()
+    {
+        boolean sequencesMatch = true;
+        for(int i = 0; i<24;i++)
+        {
+            if( activeKeys[i] != chords.get(activeChordIndex)[i])
+            {
+                sequencesMatch = false;
+            }
+        }
+
+        if(sequencesMatch)
+        {
+            chords.remove(activeChordIndex);
+        }
+
+        for (int i=0; i<activeKeys.length;i++){ activeKeys[i] = 0; }
 
     }
 
@@ -57,8 +115,8 @@ public class MyCanvas extends View
 
     private void DrawCO5(Canvas canvas)
     {
-
         paint.setColor(Color.WHITE);
+        paint.setStyle(Paint.Style.FILL);
 
         canvas.drawRect(0f,0f,canvas.getWidth(), canvas.getHeight(), paint );
 
@@ -103,8 +161,6 @@ public class MyCanvas extends View
             paint.setTextAlign(Paint.Align.CENTER);
 
             canvas.drawText(musicalNotes[i],newTextX,newTextY,paint);
-
-
         }
     }
 
@@ -221,35 +277,169 @@ public class MyCanvas extends View
 
     private void DrawNotes(Canvas canvas)
     {
-        float[] noteXVertices = new float[24];
-        float[] noteYVertices = new float[24];
+        float[] noteXVertices = new float[12];
+        float[] noteYVertices = new float[12];
 
         int vertexCount = 0;
 
-        for(int i = 0 ; i < activeKeys.length; i++)
+        int j = 0; //special index for maintaining proper sequencing
+
+        for(int i = 0 ; i < 12; i++)
         {
-            if( activeKeys[i] == 1)
+            if( activeKeys[j] == 1 | activeKeys[j+12] == 1)
             {
-                float[] vertex = getVertices(keyBoardNoteOrder[i%12]);
+                float[] vertex = getVertices(keyBoardNoteOrder[j]);
 
                 noteXVertices[vertexCount] = vertex[0];
                 noteYVertices[vertexCount] = vertex[1];
 
                 vertexCount++;
-
             }
+
+            j = (j+7)%12; //does the indexing by intervals of 7 because thats how its displayed on the circle
         }
 
-        paint.setColor(Color.BLACK);
-        paint.setStrokeWidth(3);
-        for(int i = 0; i < vertexCount; i++)
+        paint.setColor(Color.LTGRAY);
+        paint.setStrokeWidth(5);
+        paint.setStyle(Paint.Style.FILL);
+
+        Path co5Shape = new Path();
+        co5Shape.moveTo(noteXVertices[0],noteYVertices[0]);
+        for(int i = 1; i < vertexCount; i++)
         {
-            for(int j = 0; j < vertexCount; j++)
-            {
-                canvas.drawLine(noteXVertices[i],noteYVertices[i],noteXVertices[j],noteYVertices[j],paint);
+            co5Shape.lineTo(noteXVertices[i],noteYVertices[i]);
+        }
+        co5Shape.lineTo(noteXVertices[0],noteYVertices[0]);
+
+        paint.setColor(Color.LTGRAY);
+        paint.setStrokeWidth(5);
+        paint.setStyle(Paint.Style.FILL);
+
+        canvas.drawPath(co5Shape,paint);
+
+        paint.setColor(Color.BLACK);
+        paint.setStrokeWidth(5);
+        paint.setStyle(Paint.Style.STROKE);
+
+        canvas.drawPath(co5Shape,paint);
+    }
+
+    private void DrawUI(Canvas canvas)
+    {
+        addChordButton = new RectF(180,canvas.getHeight()*(9f/10),280,canvas.getHeight()*(9f/10)+ 120);
+
+        paint.setColor(Color.LTGRAY);
+        paint.setStyle(Paint.Style.FILL);
+
+        canvas.drawRect(addChordButton,paint);
+
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+
+        canvas.drawRect(addChordButton,paint);
+
+        canvas.drawText("+",230,canvas.getHeight()*(9f/10) + 75 , paint);
+
+
+
+        removeChordButton = new RectF(40,canvas.getHeight()*(9f/10),140,canvas.getHeight()*(9f/10)+ 120);
+
+        paint.setColor(Color.LTGRAY);
+        paint.setStyle(Paint.Style.FILL);
+
+        canvas.drawRect(removeChordButton,paint);
+
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+
+        canvas.drawRect(removeChordButton,paint);
+
+        canvas.drawText("-",90,canvas.getHeight()*(9f/10) + 75 , paint);
+
+
+        cycleChordProgressionBackwardButton = new RectF(360,canvas.getHeight()*(9f/10),460,canvas.getHeight()*(9f/10)+ 120);
+
+        paint.setColor(Color.LTGRAY);
+        paint.setStyle(Paint.Style.FILL);
+
+        canvas.drawRect(cycleChordProgressionBackwardButton,paint);
+
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+
+        canvas.drawRect(cycleChordProgressionBackwardButton,paint);
+
+        canvas.drawText("<",410,canvas.getHeight()*(9f/10) + 75 , paint);
+
+
+        cycleChordProgressionForwardButton = new RectF(500,canvas.getHeight()*(9f/10),600,canvas.getHeight()*(9f/10) + 120);
+
+        paint.setColor(Color.LTGRAY);
+        paint.setStyle(Paint.Style.FILL);
+
+        canvas.drawRect(cycleChordProgressionForwardButton,paint);
+
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+
+        canvas.drawRect(cycleChordProgressionForwardButton,paint);
+
+        canvas.drawText(">",550,canvas.getHeight()*(9f/10) + 75 , paint);
+
+    }
+
+
+    private void WatchUIButtons(MotionEvent event)
+    {
+        boolean UIUpdated = false;
+
+        if( addChordButton.contains(event.getX(),event.getY()))
+        {
+            AddChord();
+            UIUpdated = true;
+        }
+
+        if( removeChordButton.contains(event.getX(),event.getY()))
+        {
+            RemoveChord();
+            UIUpdated = true;
+        }
+
+        if(cycleChordProgressionForwardButton.contains(event.getX(),event.getY()))
+        {
+            SwitchChords(1);
+            UIUpdated = true;
+        }
+
+        if(cycleChordProgressionBackwardButton.contains(event.getX(),event.getY()))
+        {
+            SwitchChords(-1);
+            UIUpdated = true;
+        }
+
+        if( UIUpdated ){this.invalidate();}
+
+    }
+
+    private void WatchKeyboard(MotionEvent event)
+    {
+        //checks the keys
+        for(int i = 0; i < keys.length;i++)
+        {
+            //if the point where you tap is inside any of the keys rectangles
+            //if it is, the keys gets toggled
+            boolean inKey1 = (keys[i][0].contains(event.getX(),event.getY()));
+
+            boolean inKey2 = false;
+            if( keys[i][1] != null ){inKey2 = keys[i][1].contains(event.getX(),event.getY());}
+
+            if(inKey1 | inKey2){
+                activeKeys[i] = (activeKeys[i]+1) % 2; //toggles the key
+                this.invalidate();
             }
         }
     }
+
 
 
 
@@ -260,6 +450,7 @@ public class MyCanvas extends View
         DrawCO5(canvas);
         DrawKeyBoard(canvas);
         DrawNotes(canvas);
+        DrawUI(canvas);
     }
 
     @Override
@@ -267,20 +458,8 @@ public class MyCanvas extends View
     {
         if( event.getAction() == MotionEvent.ACTION_DOWN)
         {
-            for(int i = 0; i < keys.length;i++)
-            {
-                //if the point where you tap is inside any of the keys rectangles
-                //if it is, the keys gets toggled
-                boolean inKey1 = (keys[i][0].contains(event.getX(),event.getY()));
-
-                boolean inKey2 = false;
-                if( keys[i][1] != null ){inKey2 = keys[i][1].contains(event.getX(),event.getY());}
-
-                if(inKey1 | inKey2){
-                    activeKeys[i] = (activeKeys[i]+1) % 2; //toggles the key
-                    this.invalidate();
-                }
-            }
+            WatchUIButtons(event);
+            WatchKeyboard(event);
         }
 
         return super.onTouchEvent(event);
