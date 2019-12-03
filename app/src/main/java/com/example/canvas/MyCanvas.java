@@ -27,13 +27,15 @@ public class MyCanvas extends View
     RectF[][] keys = new RectF[24][2]; //each keys contains multiple rectangles
 
     int activeChordIndex = 0;
-    ArrayList<int[]> chords = new ArrayList();
+    ArrayList<int[]> chords = new ArrayList<>();
     int[] activeKeys = new int[24];
 
     RectF addChordButton;
     RectF removeChordButton;
     RectF cycleChordProgressionForwardButton;
     RectF cycleChordProgressionBackwardButton;
+
+    ChordPlayer chordPlayer;
 
 
     public MyCanvas(Context context)
@@ -43,7 +45,10 @@ public class MyCanvas extends View
         paint = new Paint();
         paint.setAntiAlias(true);
 
+        chordPlayer = new ChordPlayer();
     }
+
+
 
     private void SwitchChords(int direction)
     {
@@ -68,7 +73,13 @@ public class MyCanvas extends View
         int[] newChord = new int[24];
         for(int i=0; i < 24; i++){ newChord[i]=activeKeys[i]; }
 
-        chords.add(newChord);
+        if(chords.size()>0){
+            chords.add((activeChordIndex + 1),newChord);
+        }
+        else{
+            chords.add(newChord);
+        }
+
 
         //sets all the keys to in active after adding chord
         for (int i=0; i<activeKeys.length;i++){ activeKeys[i] = 0; }
@@ -76,18 +87,18 @@ public class MyCanvas extends View
 
     private void RemoveChord()
     {
-        boolean sequencesMatch = true;
-        for(int i = 0; i<24;i++)
+        if( chords.size() > 0)
         {
-            if( activeKeys[i] != chords.get(activeChordIndex)[i])
-            {
-                sequencesMatch = false;
+            boolean sequencesMatch = true;
+            for (int i = 0; i < 24; i++) {
+                if (activeKeys[i] != chords.get(activeChordIndex)[i]) {
+                    sequencesMatch = false;
+                }
             }
-        }
 
-        if(sequencesMatch)
-        {
-            chords.remove(activeChordIndex);
+            if (sequencesMatch) {
+                chords.remove(activeChordIndex);
+            }
         }
 
         for (int i=0; i<activeKeys.length;i++){ activeKeys[i] = 0; }
@@ -112,6 +123,8 @@ public class MyCanvas extends View
 
         return noteVertices;
     }
+
+
 
     private void DrawCO5(Canvas canvas)
     {
@@ -326,6 +339,10 @@ public class MyCanvas extends View
 
     private void DrawUI(Canvas canvas)
     {
+        paint.setTextSize(37.5f);
+        paint.setStrokeWidth(3);
+
+
         addChordButton = new RectF(180,canvas.getHeight()*(9f/10),280,canvas.getHeight()*(9f/10)+ 120);
 
         paint.setColor(Color.LTGRAY);
@@ -451,6 +468,8 @@ public class MyCanvas extends View
         DrawKeyBoard(canvas);
         DrawNotes(canvas);
         DrawUI(canvas);
+
+        //chordPlayer.PlayChord(activeKeys,0.5f);
     }
 
     @Override
