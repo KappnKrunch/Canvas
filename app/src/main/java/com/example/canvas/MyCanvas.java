@@ -78,6 +78,7 @@ public class MyCanvas extends View
         }
         else{
             chords.add(newChord);
+
         }
 
 
