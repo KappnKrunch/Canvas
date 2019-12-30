@@ -151,7 +151,7 @@ public class MyCanvas extends View
 
         for(int i = 0; i < keyBoardNoteOrder.length; i++)
         {
-            if(note == keyBoardNoteOrder[i])
+            if(note.equals(keyBoardNoteOrder[i]))
             {
                 returnIndex = i;
             }
