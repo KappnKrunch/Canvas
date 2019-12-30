@@ -8,6 +8,7 @@ import java.lang.Math;
 
 import android.graphics.Point;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,6 +19,8 @@ public class MyCanvas extends View
 {
 
     Paint paint;
+    float co5CenterX;
+    float co5CenterY;
     float[] xVerts = new float[12];
     float[] yVerts = new float[12];
 
@@ -167,11 +170,14 @@ public class MyCanvas extends View
 
     private void DrawArrowhead(Canvas canvas, float xPos, float yPos, float fromX, float fromY, float toX, float toY, Paint paint)
     {
+        //gets the rotation between the two points
         float deltaX = fromX - toX;
         float deltaY = fromY - toY;
-        float thetaRadians = (float)Math.atan2(deltaY,deltaX) - 3.14159f*0.5f;
-        float size = 20;
+        float thetaRadians = (float)Math.atan2(deltaY,deltaX) - 3.14159f*0.5f; //add a 90 degree rotation
 
+
+        //describes an equilateral triangle at the origin then rotates it; based on theta radians
+        float size = 20;
         float topVertexX = (0f * (float)Math.cos(thetaRadians)) - (size*0.5f * (float)Math.sin(thetaRadians));
         float topVertexY = (size*0.5f*(float)Math.cos(thetaRadians)) + (0f*(float)Math.sin(thetaRadians));
 
@@ -182,18 +188,13 @@ public class MyCanvas extends View
         float leftVertexY = (-size*0.5f * (float)Math.cos(thetaRadians)) + (-size*0.5f * (float)Math.sin(thetaRadians));
 
 
-        //Log.d("DrawArrowhead",String.valueOf(xPos)+","+String.valueOf(yPos)+"\n"+String.valueOf(leftVertexX)+","+String.valueOf(leftVertexY));
-
+        //draws the triangle local to (xPos,yPos)
         Path arrowHeadPath = new Path();
 
         arrowHeadPath.moveTo(topVertexX+xPos,topVertexY+yPos);
         arrowHeadPath.lineTo(leftVertexX+xPos,leftVertexY+yPos);
         arrowHeadPath.lineTo(rightVertexX+xPos,rightVertexY+yPos);
         arrowHeadPath.lineTo(topVertexX+xPos,topVertexY+yPos);
-
-        //canvas.drawCircle(topVertexX+xPos,topVertexY+yPos,3,paint);
-        //canvas.drawCircle(leftVertexX,leftVertexY,5,paint);
-        //canvas.drawCircle(rightVertexX,rightVertexY,5,paint);
 
         canvas.drawPath(arrowHeadPath,paint);
     }
@@ -218,8 +219,6 @@ public class MyCanvas extends View
         return noteVertices;
     }
 
-
-
     private void DrawCO5(Canvas canvas)
     {
         paint.setColor(Color.BLACK);
@@ -231,6 +230,9 @@ public class MyCanvas extends View
         float radius = canvas.getWidth() / (1.618f*1.5f);
         float centerX = canvas.getWidth()/2;
         float centerY = canvas.getHeight()/2.8f;
+
+        co5CenterX = centerX; //set these globally
+        co5CenterY = centerY;
 
         canvas.drawCircle(centerX,centerY,radius,paint);
 
@@ -263,6 +265,7 @@ public class MyCanvas extends View
             paint.setStyle(Paint.Style.FILL);
             paint.setTextSize(50);
             paint.setTextAlign(Paint.Align.CENTER);
+            paint.setTypeface(Typeface.DEFAULT);
 
             if(sharps)
             {
@@ -423,7 +426,6 @@ public class MyCanvas extends View
         return intervls[interval];
     }
 
-
     private void DrawCO5Relations(Canvas canvas, float[] noteXVertices, float[] noteYVertices, int vertexCount)
     {
 
@@ -466,22 +468,46 @@ public class MyCanvas extends View
                     paint.setColor(0xfffd837b);
                     canvas.drawLine(noteXVertices[i],noteYVertices[i],nextNoteXVertices[k],nextNoteYVertices[k],paint);
 
+                    float directionalX = nextNoteXVertices[k] - noteXVertices[i];
+                    float directionalY = nextNoteYVertices[k] - noteYVertices[i];
 
-                    float arrowPointX = (noteXVertices[i]*7 + nextNoteXVertices[k]) /8;
-                    float arrowPointY = (noteYVertices[i]*7 + nextNoteYVertices[k]) /8;
+                    float directionalMagnitude = (float)Math.sqrt(Math.pow(directionalX,2)  + Math.pow(directionalY,2));
 
-                    DrawArrowhead(canvas,arrowPointX,arrowPointY,noteXVertices[i],noteYVertices[i],nextNoteXVertices[k],nextNoteYVertices[k],paint);
+                    directionalX/=directionalMagnitude;
+                    directionalY/=directionalMagnitude;
+
+
+                    float midPointX = noteXVertices[i] + (directionalX*65);
+                    float midPointY = noteYVertices[i] + (directionalY*65);
+
+                    DrawArrowhead(canvas,midPointX,midPointY,noteXVertices[i],noteYVertices[i],nextNoteXVertices[k],nextNoteYVertices[k],paint);
                 }
+            }
 
+            for(int i = 0; i < vertexCount; i++)
+            {
                 for(int k = 0; k < newVertexCount; k++)
                 {
                     paint.setColor(Color.BLACK);
                     paint.setTextSize(35);
+                    //paint.setStrokeWidth(100);
+                    paint.setTypeface(Typeface.DEFAULT_BOLD);
 
-                    canvas.drawCircle(nextNoteXVertices[k],nextNoteYVertices[k],10,paint);
 
-                    float midPointX = (noteXVertices[i]*3 + nextNoteXVertices[k]) /4;
-                    float midPointY = (noteYVertices[i]*3 + nextNoteYVertices[k]) /4;
+
+                    //gets the directional vector between the vertices
+
+                    float directionalX = nextNoteXVertices[k] - noteXVertices[i];
+                    float directionalY = nextNoteYVertices[k] - noteYVertices[i];
+
+                    float directionalMagnitude = (float)Math.sqrt(Math.pow(directionalX,2)  + Math.pow(directionalY,2));
+
+                    directionalX/=directionalMagnitude;
+                    directionalY/=directionalMagnitude;
+
+
+                    float midPointX = noteXVertices[i] + (directionalX*(115+65*((i+k)%2)));
+                    float midPointY = noteYVertices[i] + (directionalY*(115+65*((i+k)%2)));
 
                     float textHeightOffset = (paint.ascent() + paint.descent()) * 0.5f;
 
@@ -503,7 +529,11 @@ public class MyCanvas extends View
                         String upperInterval = intervalBetweenNotes.split("\n")[0];
                         canvas.drawText(upperInterval,midPointX,midPointY- textHeightOffset,paint);
                     }
+
+                    canvas.drawCircle(nextNoteXVertices[k],nextNoteYVertices[k],10,paint);
                 }
+
+                canvas.drawCircle(noteXVertices[i],noteYVertices[i],10,paint);
             }
         }
 
@@ -546,6 +576,7 @@ public class MyCanvas extends View
     {
         paint.setTextSize(37.5f);
         paint.setStrokeWidth(3);
+        paint.setTypeface(Typeface.DEFAULT);
 
 
 
@@ -722,6 +753,9 @@ public class MyCanvas extends View
 
 
 
+
+
+    //the program
 
     @Override
     protected void onDraw(Canvas canvas) {
