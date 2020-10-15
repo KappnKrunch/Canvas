@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import java.lang.Math;
 
-import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.util.Log;
@@ -14,11 +13,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.graphics.Path;
 import java.util.ArrayList;
+import java.lang.String;
 
-public class MyCanvas extends View
+public class ChordVisualizer extends View
 {
-
     Paint paint;
+
+    String menu = "chord display";
+
     float co5CenterX;
     float co5CenterY;
     float[] xVerts = new float[12];
@@ -46,7 +48,7 @@ public class MyCanvas extends View
     RectF showInternalRelationsButton;
 
 
-    public MyCanvas(Context context)
+    public ChordVisualizer(Context context)
     {
         super(context);
 
@@ -59,16 +61,16 @@ public class MyCanvas extends View
     private void SwitchChords(int direction)
     {
         //takes in an int that corresponds to how many spaces the index shifts
-        if(chords.size() > 0) {
+        if(chords.size() > 0)
+        {
             activeChordIndex = (activeChordIndex + direction) % chords.size();
+
             if( activeChordIndex < 0){activeChordIndex+=chords.size();}
 
-            //activeKeys = chords.get(activeChordIndex);
 
             for (int i=0;i<activeKeys.length;i++)
             {
                 activeKeys[i] = chords.get(activeChordIndex)[i];
-
             }
         }
     }
@@ -96,19 +98,22 @@ public class MyCanvas extends View
         if( chords.size() > 0)
         {
             boolean sequencesMatch = true;
-            for (int i = 0; i < 24; i++) {
-                if (activeKeys[i] != chords.get(activeChordIndex)[i]) {
+
+            for (int i = 0; i < 24; i++)
+            {
+                if (activeKeys[i] != chords.get(activeChordIndex)[i])
+                {
                     sequencesMatch = false;
                 }
             }
 
-            if (sequencesMatch) {
+            if (sequencesMatch)
+            {
                 chords.remove(activeChordIndex);
             }
         }
 
         for (int i=0; i<activeKeys.length;i++){ activeKeys[i] = 0; }
-
     }
 
     private String GetNoteFromVertex(float xPos, float yPos)
@@ -120,18 +125,12 @@ public class MyCanvas extends View
         {
             if( xVerts[i] == xPos){
                 noteIndexX.add(i);
-
-                //Log.d("noteIndexX",String.valueOf(i));
             }
 
             if( yVerts[i] == yPos){
                 noteIndexY.add(i);
-
-                //Log.d("noteIndexY",String.valueOf(i));
             }
         }
-
-        //Log.d("noteIndex",String.valueOf(noteIndexX.size()));
 
         ArrayList<Integer> finalNoteIndex = new ArrayList<>();
 
@@ -198,7 +197,6 @@ public class MyCanvas extends View
 
         canvas.drawPath(arrowHeadPath,paint);
     }
-
 
     private float[] getVertices(String note)
     {
@@ -280,7 +278,7 @@ public class MyCanvas extends View
 
     private void DrawKeyBoard(Canvas canvas)
     {
-        //this counts the keyboard as if theres 14 keys (white + black) and removes 2 to make it look like a keyboard
+        //this counts the keyboard as if there's 14 keys (white + black) and removes 2 to make it look like a keyboard
         int[] keyboardLayout = {1,1,1,1,1,0,1,1,1,1,1,1,1,0};
 
         float whiteKeyWidth = 25f;
@@ -310,7 +308,6 @@ public class MyCanvas extends View
                 //this is the bit that actually
                 if(i % 2 == 0)
                 {
-
                     if(activeKeys[currentKeyIndex] == 0)
                     {
                         paint.setColor(Color.LTGRAY);
@@ -431,8 +428,8 @@ public class MyCanvas extends View
 
         if(showInternalRelations & chords.size() > 0)
         {
-            float[] nextNoteXVertices = new float[12];
-            float[] nextNoteYVertices = new float[12];
+            float[] otherNoteXVertices = new float[12];
+            float[] otherNoteYVertices = new float[12];
             int newVertexCount = 0;
             int j = 0;
 
@@ -444,8 +441,8 @@ public class MyCanvas extends View
                 {
                     float[] vertex = getVertices(keyBoardNoteOrder[j]);
 
-                    nextNoteXVertices[newVertexCount] = vertex[0];
-                    nextNoteYVertices[newVertexCount] = vertex[1];
+                    otherNoteXVertices[newVertexCount] = vertex[0];
+                    otherNoteYVertices[newVertexCount] = vertex[1];
 
                     newVertexCount++;
                 }
@@ -466,10 +463,10 @@ public class MyCanvas extends View
                 for(int k = 0; k < newVertexCount; k++)
                 {
                     paint.setColor(0xfffd837b);
-                    canvas.drawLine(noteXVertices[i],noteYVertices[i],nextNoteXVertices[k],nextNoteYVertices[k],paint);
+                    canvas.drawLine(noteXVertices[i],noteYVertices[i],otherNoteXVertices[k],otherNoteYVertices[k],paint);
 
-                    float directionalX = nextNoteXVertices[k] - noteXVertices[i];
-                    float directionalY = nextNoteYVertices[k] - noteYVertices[i];
+                    float directionalX = otherNoteXVertices[k] - noteXVertices[i];
+                    float directionalY = otherNoteYVertices[k] - noteYVertices[i];
 
                     float directionalMagnitude = (float)Math.sqrt(Math.pow(directionalX,2)  + Math.pow(directionalY,2));
 
@@ -480,7 +477,7 @@ public class MyCanvas extends View
                     float midPointX = noteXVertices[i] + (directionalX*65);
                     float midPointY = noteYVertices[i] + (directionalY*65);
 
-                    DrawArrowhead(canvas,midPointX,midPointY,noteXVertices[i],noteYVertices[i],nextNoteXVertices[k],nextNoteYVertices[k],paint);
+                    DrawArrowhead(canvas,midPointX,midPointY,noteXVertices[i],noteYVertices[i],otherNoteXVertices[k],otherNoteYVertices[k],paint);
                 }
             }
 
@@ -493,26 +490,34 @@ public class MyCanvas extends View
                     //paint.setStrokeWidth(100);
                     paint.setTypeface(Typeface.DEFAULT_BOLD);
 
+                    //directional vector between current note and center to compare
+                    float centerDirectionalX =  noteXVertices[i] - co5CenterX;
+                    float centerDirectionalY = noteYVertices[i] - co5CenterY;
+
+                    float centerThetaRadians = (float)Math.atan2(centerDirectionalY,centerDirectionalX);
 
 
                     //gets the directional vector between the vertices
+                    float directionalX = otherNoteXVertices[k] - noteXVertices[i];
+                    float directionalY = otherNoteYVertices[k] - noteYVertices[i];
 
-                    float directionalX = nextNoteXVertices[k] - noteXVertices[i];
-                    float directionalY = nextNoteYVertices[k] - noteYVertices[i];
+                    float thetaRadians = (float)Math.atan2(directionalY,directionalX);
 
-                    float directionalMagnitude = (float)Math.sqrt(Math.pow(directionalX,2)  + Math.pow(directionalY,2));
+                    float radiansToCenter = Math.abs(thetaRadians-centerThetaRadians); //the distance between the two angles
+                    Log.d("DrawRelations",String.valueOf(radiansToCenter) + GetNoteFromVertex(otherNoteXVertices[k],otherNoteYVertices[k]));
+                    float directionalMagnitude = (float)Math.sqrt(Math.pow(directionalX,2) + Math.pow(directionalY,2));
 
                     directionalX/=directionalMagnitude;
                     directionalY/=directionalMagnitude;
 
 
-                    float midPointX = noteXVertices[i] + (directionalX*(115+65*((i+k)%2)));
-                    float midPointY = noteYVertices[i] + (directionalY*(115+65*((i+k)%2)));
+                    float midPointX = noteXVertices[i] + (directionalX*(115+65*radiansToCenter));
+                    float midPointY = noteYVertices[i] + (directionalY*(115+65*radiansToCenter));
 
                     float textHeightOffset = (paint.ascent() + paint.descent()) * 0.5f;
 
                     String noteA = GetNoteFromVertex(noteXVertices[i],noteYVertices[i]);
-                    String noteB = GetNoteFromVertex(nextNoteXVertices[k],nextNoteYVertices[k]);
+                    String noteB = GetNoteFromVertex(otherNoteXVertices[k],otherNoteYVertices[k]);
 
                     String intervalBetweenNotes = IntervalBetweenNotes(noteA,noteB);
 
@@ -530,7 +535,7 @@ public class MyCanvas extends View
                         canvas.drawText(upperInterval,midPointX,midPointY- textHeightOffset,paint);
                     }
 
-                    canvas.drawCircle(nextNoteXVertices[k],nextNoteYVertices[k],10,paint);
+                    canvas.drawCircle(otherNoteXVertices[k],otherNoteYVertices[k],10,paint);
                 }
 
                 canvas.drawCircle(noteXVertices[i],noteYVertices[i],10,paint);
@@ -538,7 +543,6 @@ public class MyCanvas extends View
         }
 
     }
-
 
     private void DrawCO5Notes(Canvas canvas)
     {
@@ -687,7 +691,6 @@ public class MyCanvas extends View
 
     }
 
-
     private void WatchUIButtons(MotionEvent event)
     {
         boolean UIUpdated = false;
@@ -764,12 +767,20 @@ public class MyCanvas extends View
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.FILL);
 
-        canvas.drawRect(0f,0f,canvas.getWidth(), canvas.getHeight(), paint );
+        canvas.drawRect(0f,0f, canvas.getWidth(), canvas.getHeight(), paint );
 
-        DrawCO5(canvas);
-        DrawKeyBoard(canvas);
-        DrawCO5Notes(canvas);
-        DrawUI(canvas);
+        if(menu == "display chord")
+        {
+            DrawCO5(canvas);
+            DrawKeyBoard(canvas);
+            DrawCO5Notes(canvas);
+            DrawUI(canvas);
+        }
+        else if(menu == "settings")
+        {
+
+        }
+
 
         //chordPlayer.PlayChord(activeKeys,0.5f);
     }
