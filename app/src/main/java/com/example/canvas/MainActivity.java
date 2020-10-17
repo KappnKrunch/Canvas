@@ -5,19 +5,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.Color;
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+{
 
-    MyCanvas myCanvas;
+    ChordVisualizer chordVisualization;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
-        myCanvas = new MyCanvas(this);
+        chordVisualization = new ChordVisualizer(this);
 
-        myCanvas.setBackgroundColor(Color.YELLOW);
+        chordVisualization.setBackgroundColor(Color.YELLOW);
 
 
-
-        setContentView(myCanvas);
+        setContentView(chordVisualization);
     }
 }
